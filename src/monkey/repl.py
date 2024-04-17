@@ -1,6 +1,8 @@
 import sys
 import typing
 
+from monkey.environment import Environment
+from monkey.evaluator import monkey_eval
 from monkey.lexer import Lexer
 from monkey.parser import Parser
 
@@ -8,6 +10,7 @@ PROMPT: str = ">> "
 
 
 def start(f: typing.IO = sys.stdout):
+    env = Environment()
     while True:
         try:
             line = input(PROMPT)
@@ -18,6 +21,9 @@ def start(f: typing.IO = sys.stdout):
             lexer = Lexer(input=line)
             parser = Parser(lexer)
             program = parser.parse_program()
-            f.write(f"{program}\n")
         except Exception as e:
             f.write(f"Error: {e}\n")
+            continue
+
+        evaluated = monkey_eval(program, env)
+        f.write(f"{evaluated}\n")

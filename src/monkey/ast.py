@@ -159,9 +159,9 @@ class LetStatement(Statement):
 
 
 class ReturnStatement(Statement):
-    def __init__(self, token: Token, value: Optional[Expression] = None):
+    def __init__(self, token: Token, value: Expression):
         super().__init__(token)
-        self.value: Optional[Expression] = value
+        self.value: Expression = value
 
     def __str__(self) -> str:
         s = f"{self.token.literal} "
@@ -171,9 +171,9 @@ class ReturnStatement(Statement):
 
 
 class ExpressionStatement(Statement):
-    def __init__(self, token: Token, expression: Optional[Expression] = None):
+    def __init__(self, token: Token, expression: Expression):
         super().__init__(token)
-        self.expression: Optional[Expression] = expression
+        self.expression: Expression = expression
 
     def __str__(self) -> str:
         return f"{self.expression}"
