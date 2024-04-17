@@ -4,14 +4,12 @@ from typing import NamedTuple
 
 class TokenType(Enum):
     ILLEGAL = "ILLEGAL"
-    EOF = "\x00"
+    EOF = "EOF"
 
-    # Identifiers + literals
-    IDENT = "IDENT"  # add, foobar, x, y, ...
-    INT = "INT"  # 123123
-    STRING = "STRING"  # "foobar"
+    IDENT = "IDENT"
+    INT = "INT"
+    STRING = "STRING"
 
-    # Operators
     ASSIGN = "="
     PLUS = "+"
     MINUS = "-"
@@ -25,7 +23,6 @@ class TokenType(Enum):
     EQ = "=="
     NOT_EQ = "!="
 
-    # Delimiters
     COMMA = ","
     SEMICOLON = ";"
     COLON = ":"
@@ -37,7 +34,6 @@ class TokenType(Enum):
     LBRACKET = "["
     RBRACKET = "]"
 
-    # Keywords
     FUNCTION = "FUNCTION"
     LET = "LET"
     TRUE = "TRUE"
@@ -55,36 +51,65 @@ class Token(NamedTuple):
         return f"{self.__class__.__name__}({self.type}, '{self.literal}')"
 
 
+ASSIGN = Token(TokenType.ASSIGN, "=")
+PLUS = Token(TokenType.PLUS, "+")
+MINUS = Token(TokenType.MINUS, "-")
+BANG = Token(TokenType.BANG, "!")
+ASTERISK = Token(TokenType.ASTERISK, "*")
+SLASH = Token(TokenType.SLASH, "/")
+LT = Token(TokenType.LT, "<")
+GT = Token(TokenType.GT, ">")
+COMMA = Token(TokenType.COMMA, ",")
+SEMICOLON = Token(TokenType.SEMICOLON, ";")
+COLON = Token(TokenType.COLON, ":")
+LPAREN = Token(TokenType.LPAREN, "(")
+RPAREN = Token(TokenType.RPAREN, ")")
+LBRACE = Token(TokenType.LBRACE, "{")
+RBRACE = Token(TokenType.RBRACE, "}")
+LBRACKET = Token(TokenType.LBRACKET, "[")
+RBRACKET = Token(TokenType.RBRACKET, "]")
+EQ = Token(TokenType.EQ, "==")
+NOT_EQ = Token(TokenType.NOT_EQ, "!=")
+EOF = Token(TokenType.EOF, "\x00")
+
+FUNCTION = Token(TokenType.FUNCTION, "fn")
+LET = Token(TokenType.LET, "let")
+TRUE = Token(TokenType.TRUE, "true")
+FALSE = Token(TokenType.FALSE, "false")
+IF = Token(TokenType.IF, "if")
+ELSE = Token(TokenType.ELSE, "else")
+RETURN = Token(TokenType.RETURN, "return")
+
 STATIC_TOKENS: dict[str, Token] = {
-    "=": Token(TokenType.ASSIGN, "="),
-    "+": Token(TokenType.PLUS, "+"),
-    "-": Token(TokenType.MINUS, "-"),
-    "!": Token(TokenType.BANG, "!"),
-    "*": Token(TokenType.ASTERISK, "*"),
-    "/": Token(TokenType.SLASH, "/"),
-    "<": Token(TokenType.LT, "<"),
-    ">": Token(TokenType.GT, ">"),
-    ",": Token(TokenType.COMMA, ","),
-    ";": Token(TokenType.SEMICOLON, ";"),
-    ":": Token(TokenType.COLON, ":"),
-    "(": Token(TokenType.LPAREN, "("),
-    ")": Token(TokenType.RPAREN, ")"),
-    "{": Token(TokenType.LBRACE, "{"),
-    "}": Token(TokenType.RBRACE, "}"),
-    "[": Token(TokenType.LBRACKET, "["),
-    "]": Token(TokenType.RBRACKET, "]"),
-    "==": Token(TokenType.EQ, "=="),
-    "!=": Token(TokenType.NOT_EQ, "!="),
-    "\x00": Token(TokenType.EOF, "\x00"),
+    "=": ASSIGN,
+    "+": PLUS,
+    "-": MINUS,
+    "!": BANG,
+    "*": ASTERISK,
+    "/": SLASH,
+    "<": LT,
+    ">": GT,
+    ",": COMMA,
+    ";": SEMICOLON,
+    ":": COLON,
+    "(": LPAREN,
+    ")": RPAREN,
+    "{": LBRACE,
+    "}": RBRACE,
+    "[": LBRACKET,
+    "]": RBRACKET,
+    "==": EQ,
+    "!=": NOT_EQ,
+    "\x00": EOF,
 }
 
 
 KEYWORDS: dict[str, Token] = {
-    "fn": Token(TokenType.FUNCTION, "fn"),
-    "let": Token(TokenType.LET, "let"),
-    "true": Token(TokenType.TRUE, "true"),
-    "false": Token(TokenType.FALSE, "false"),
-    "if": Token(TokenType.IF, "if"),
-    "else": Token(TokenType.ELSE, "else"),
-    "return": Token(TokenType.RETURN, "return"),
+    "fn": FUNCTION,
+    "let": LET,
+    "true": TRUE,
+    "false": FALSE,
+    "if": IF,
+    "else": ELSE,
+    "return": RETURN,
 }
