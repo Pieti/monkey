@@ -52,10 +52,17 @@ def _push(*args: MonkeyObject) -> MonkeyObject:
     return Array(new_elements)
 
 
+def _puts(*args: MonkeyObject) -> MonkeyObject:
+    for arg in args:
+        print(str(arg))
+    return NULL
+
+
 BUILTINS: dict[str, Builtin] = {
     "len": Builtin(_len),
     "first": Builtin(_first),
     "last": Builtin(_last),
     "rest": Builtin(_rest),
     "push": Builtin(_push),
+    "puts": Builtin(_puts),
 }

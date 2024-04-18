@@ -338,19 +338,16 @@ class Parser:
             self.next_token()
             key = self.parse_expression(Precedence.LOWEST)
 
-            if not self.expect_peek(TokenType.COLON):
-                return ast.HashLiteral(token=self.cur_token, pairs={})
+            assert self.expect_peek(TokenType.COLON), "Expected COLON after key"
 
             self.next_token()
             value = self.parse_expression(Precedence.LOWEST)
 
             pairs[key] = value
 
-            if not self.peek_token_is(TokenType.RBRACE) and not self.expect_peek(
+            assert self.peek_token_is(TokenType.RBRACE) or self.expect_peek(
                 TokenType.COMMA
-            ):
-                return ast.HashLiteral(token=self.cur_token, pairs={})
+            ), "Expected RBRACE or COMMA"
 
-        if not self.expect_peek(TokenType.RBRACE):
-            return ast.HashLiteral(token=self.cur_token, pairs={})
+        assert self.expect_peek(TokenType.RBRACE), "Expected RBRACE after hash literal"
         return ast.HashLiteral(token=cur_token, pairs=pairs)

@@ -388,3 +388,65 @@ def test_parsing_index_expressions() -> None:
     assert isinstance(stmt.expression, ast.IndexExpression)
     _test_identifier(stmt.expression.left, "myArray")
     _test_infix_expression(stmt.expression.index, 1, "+", 1)
+
+
+def test_parsing_hash_literals_string_keys() -> None:
+    input = '{"one": 1, "two": 2, "three": 3}'
+
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement)
+    assert isinstance(stmt.expression, ast.HashLiteral)
+    assert len(stmt.expression.pairs) == 3
+
+    expected = {
+        "one": 1,
+        "two": 2,
+        "three": 3,
+    }
+
+    for key, value in stmt.expression.pairs.items():
+        assert isinstance(value, ast.IntegerLiteral)
+        assert value.value == expected[str(key)]
+
+
+def test_parsing_empty_hash_literal() -> None:
+    input = "{}"
+
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement)
+    assert isinstance(stmt.expression, ast.HashLiteral)
+    assert len(stmt.expression.pairs) == 0
+
+
+def test_parsing_hash_literals_with_expressions() -> None:
+    input = '{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5}'
+
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement)
+    assert isinstance(stmt.expression, ast.HashLiteral)
+    assert len(stmt.expression.pairs) == 3
+
+    tests = {
+        "one": lambda e: _test_infix_expression(e, 0, "+", 1),
+        "two": lambda e: _test_infix_expression(e, 10, "-", 8),
+        "three": lambda e: _test_infix_expression(e, 15, "/", 5),
+    }
+
+    for key, value in stmt.expression.pairs.items():
+        assert isinstance(key, ast.StringLiteral)
+        tests[str(key)](value)

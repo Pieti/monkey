@@ -2,7 +2,8 @@ from monkey import ast
 from monkey.builtins import BUILTINS
 from monkey.environment import Environment
 from monkey.mobj import (FALSE, NULL, TRUE, Array, Builtin, Error, Function,
-                         Integer, MonkeyObject, ReturnValue, String)
+                         Hash, Hashable, HashKey, HashPair, Integer,
+                         MonkeyObject, ReturnValue, String)
 
 
 def monkey_eval(node: ast.Node, env: Environment) -> MonkeyObject:
@@ -36,6 +37,8 @@ def monkey_eval(node: ast.Node, env: Environment) -> MonkeyObject:
         if len(elements) == 1 and isinstance(elements[0], Error):
             return elements[0]
         return Array(elements)
+    elif isinstance(node, ast.HashLiteral):
+        return _eval_hash_literal(node, env)
     elif isinstance(node, ast.IndexExpression):
         left = monkey_eval(node.left, env)
         if isinstance(left, Error):
@@ -208,6 +211,8 @@ def _eval_expressions(
 def _eval_index_expression(left: MonkeyObject, index: MonkeyObject) -> MonkeyObject:
     if isinstance(left, Array) and isinstance(index, Integer):
         return _eval_array_index_expression(left, index)
+    if isinstance(left, Hash):
+        return _eval_hash_index_expression(left, index)
     return Error(f"index operator not supported: {left.monkey_type}")
 
 
@@ -217,6 +222,31 @@ def _eval_array_index_expression(array: Array, index: Integer) -> MonkeyObject:
     if idx < 0 or idx > max:
         return NULL
     return array.elements[idx]
+
+
+def _eval_hash_index_expression(hash: Hash, index: MonkeyObject) -> MonkeyObject:
+    if not isinstance(index, Hashable):
+        return Error(f"unusable as hash key: {index.monkey_type}")
+    pair = hash.pairs.get(index.hash_key())
+    if pair is None:
+        return NULL
+    return pair.value
+
+
+def _eval_hash_literal(node: ast.HashLiteral, env: Environment) -> MonkeyObject:
+    pairs: dict[HashKey, HashPair] = {}
+    for key_node, value_node in node.pairs.items():
+        key = monkey_eval(key_node, env)
+        if isinstance(key, Error):
+            return key
+        if not isinstance(key, Hashable):
+            return Error(f"unusable as hash key: {key.monkey_type}")
+        value = monkey_eval(value_node, env)
+        if isinstance(value, Error):
+            return value
+        hashed = key.hash_key()
+        pairs[hashed] = HashPair(key, value)
+    return Hash(pairs)
 
 
 def _apply_function(fn: MonkeyObject, args: list[MonkeyObject]) -> MonkeyObject:

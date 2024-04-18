@@ -4,6 +4,20 @@ from monkey import ast
 from monkey.environment import Environment
 
 
+class HashKey:
+    def __init__(self, monkey_type: str, value: Any):
+        self.monkey_type = monkey_type
+        self.value = value
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, HashKey):
+            return False
+        return self.monkey_type == other.monkey_type and self.value == other.value
+
+    def __hash__(self) -> int:
+        return hash((self.monkey_type, self.value))
+
+
 class MonkeyObject:
     monkey_type: str = "OBJECT"
 
@@ -14,8 +28,16 @@ class MonkeyObject:
         return str(self.value)
 
 
-class Boolean(MonkeyObject):
+class Hashable:
+    def hash_key(self) -> HashKey:
+        raise NotImplementedError()
+
+
+class Boolean(MonkeyObject, Hashable):
     monkey_type: str = "BOOLEAN"
+
+    def hash_key(self) -> HashKey:
+        return HashKey(self.monkey_type, 0 if self.value else 1)
 
     def __init__(self, value: bool):
         super().__init__(value)
@@ -28,15 +50,21 @@ class Null(MonkeyObject):
         super().__init__(None)
 
 
-class Integer(MonkeyObject):
+class Integer(MonkeyObject, Hashable):
     monkey_type: str = "INTEGER"
+
+    def hash_key(self) -> HashKey:
+        return HashKey(self.monkey_type, self.value)
 
     def __init__(self, value: int):
         super().__init__(value)
 
 
-class String(MonkeyObject):
+class String(MonkeyObject, Hashable):
     monkey_type: str = "STRING"
+
+    def hash_key(self) -> HashKey:
+        return HashKey(self.monkey_type, hash(self.value))
 
     def __init__(self, value: str):
         super().__init__(value)
@@ -51,6 +79,30 @@ class Array(MonkeyObject):
 
     def __str__(self) -> str:
         return f"[{', '.join(str(e) for e in self.elements)}]"
+
+
+class HashPair(MonkeyObject):
+    def __init__(self, key: MonkeyObject, value: MonkeyObject):
+        super().__init__()
+        self.key = key
+        self.value = value
+
+    def __str__(self) -> str:
+        return f"{self.key}: {self.value}"
+
+
+class Hash(MonkeyObject):
+    monkey_type: str = "HASH"
+
+    def __init__(self, pairs: dict[HashKey, HashPair]):
+        super().__init__(pairs)
+        self.pairs = pairs
+
+    def __str__(self) -> str:
+        pairs = []
+        for k, v in self.pairs.items():
+            pairs.append(f"{k}: {v}")
+        return f"{{{', '.join(pairs)}}}"
 
 
 class ReturnValue(MonkeyObject):
