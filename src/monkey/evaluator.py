@@ -1,7 +1,8 @@
 from monkey import ast
+from monkey.builtins import BUILTINS
 from monkey.environment import Environment
-from monkey.mobj import (FALSE, NULL, TRUE, Error, Function, Integer,
-                         MonkeyObject, ReturnValue, String)
+from monkey.mobj import (FALSE, NULL, TRUE, Array, Builtin, Error, Function,
+                         Integer, MonkeyObject, ReturnValue, String)
 
 
 def monkey_eval(node: ast.Node, env: Environment) -> MonkeyObject:
@@ -30,6 +31,19 @@ def monkey_eval(node: ast.Node, env: Environment) -> MonkeyObject:
         return Integer(node.value)
     elif isinstance(node, ast.StringLiteral):
         return String(node.value)
+    elif isinstance(node, ast.ArrayLiteral):
+        elements = _eval_expressions(node.elements, env)
+        if len(elements) == 1 and isinstance(elements[0], Error):
+            return elements[0]
+        return Array(elements)
+    elif isinstance(node, ast.IndexExpression):
+        left = monkey_eval(node.left, env)
+        if isinstance(left, Error):
+            return left
+        index = monkey_eval(node.index, env)
+        if isinstance(index, Error):
+            return index
+        return _eval_index_expression(left, index)
     elif isinstance(node, ast.Boolean):
         return TRUE if node.value else FALSE
     elif isinstance(node, ast.PrefixExpression):
@@ -171,6 +185,11 @@ def _eval_identifier(node: ast.Identifier, env: Environment) -> MonkeyObject:
     value = env.get(node.value)
     if value is not None:
         return value
+
+    value = BUILTINS.get(node.value)
+    if value is not None:
+        return value
+
     return Error(f"identifier not found: {node.value}")
 
 
@@ -186,13 +205,29 @@ def _eval_expressions(
     return result
 
 
-def _apply_function(fn: MonkeyObject, args: list[MonkeyObject]) -> MonkeyObject:
-    if not isinstance(fn, Function):
-        return Error(f"not a function {fn.monkey_type}")
+def _eval_index_expression(left: MonkeyObject, index: MonkeyObject) -> MonkeyObject:
+    if isinstance(left, Array) and isinstance(index, Integer):
+        return _eval_array_index_expression(left, index)
+    return Error(f"index operator not supported: {left.monkey_type}")
 
-    extended_env = _extend_function_env(fn, args)
-    evaluated = monkey_eval(fn.body, extended_env)
-    return _unwrap_return_value(evaluated)
+
+def _eval_array_index_expression(array: Array, index: Integer) -> MonkeyObject:
+    idx = index.value
+    max = len(array.elements) - 1
+    if idx < 0 or idx > max:
+        return NULL
+    return array.elements[idx]
+
+
+def _apply_function(fn: MonkeyObject, args: list[MonkeyObject]) -> MonkeyObject:
+    if isinstance(fn, Function):
+        extended_env = _extend_function_env(fn, args)
+        evaluated = monkey_eval(fn.body, extended_env)
+        return _unwrap_return_value(evaluated)
+    elif isinstance(fn, Builtin):
+        return fn(*args)
+    else:
+        return Error(f"not a function: {fn.monkey_type}")
 
 
 def _extend_function_env(fn: Function, args: list[MonkeyObject]) -> Environment:

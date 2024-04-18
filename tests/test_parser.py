@@ -25,7 +25,7 @@ def _test_boolean(exp: ast.Expression, value: bool) -> None:
 
 
 def _test_literal_expression(exp: ast.Expression, expected: Any) -> None:
-    if expected in (True, False):
+    if expected is True or expected is False:
         _test_boolean(exp, expected)
     elif isinstance(expected, int):
         _test_integer_literal(exp, expected)
@@ -258,6 +258,14 @@ def test_integer_literal_expression() -> None:
             "!(true == true)",
             "(!(true == true))",
         ),
+        (
+            "a * [1, 2, 3, 4][b * c] * d",
+            "((a * ([1, 2, 3, 4][(b * c)])) * d)",
+        ),
+        (
+            "add(a * b[2], b[1], 2 * [1, 2][1])",
+            "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+        ),
     ],
 )
 def test_operator_precedence_parsing(input: str, expected: str) -> None:
@@ -348,3 +356,35 @@ def test_string_literal_expression() -> None:
     assert isinstance(stmt, ast.ExpressionStatement)
     assert isinstance(stmt.expression, ast.StringLiteral)
     assert stmt.expression.value == "hello world"
+
+
+def test_parsing_array_literals() -> None:
+    input = "[1, 2 * 2, 3 + 3]"
+
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement)
+    assert isinstance(stmt.expression, ast.ArrayLiteral)
+    assert len(stmt.expression.elements) == 3
+    _test_integer_literal(stmt.expression.elements[0], 1)
+    _test_infix_expression(stmt.expression.elements[1], 2, "*", 2)
+    _test_infix_expression(stmt.expression.elements[2], 3, "+", 3)
+
+
+def test_parsing_index_expressions() -> None:
+    input = "myArray[1 + 1]"
+
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement)
+    assert isinstance(stmt.expression, ast.IndexExpression)
+    _test_identifier(stmt.expression.left, "myArray")
+    _test_infix_expression(stmt.expression.index, 1, "+", 1)

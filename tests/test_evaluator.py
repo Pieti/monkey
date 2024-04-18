@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Any, Optional
 
 import pytest
 from monkey.environment import Environment
 from monkey.evaluator import monkey_eval
 from monkey.lexer import Lexer
-from monkey.mobj import (FALSE, NULL, TRUE, Error, Function, Integer,
+from monkey.mobj import (FALSE, NULL, TRUE, Array, Error, Function, Integer,
                          MonkeyObject, String)
 from monkey.parser import Parser
 
@@ -254,3 +254,86 @@ def test_string_concatenation() -> None:
     evaluated = _test_eval(input)
     assert isinstance(evaluated, String)
     assert evaluated.value == "Hello World!"
+
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        ('len("")', 0),
+        ('len("four")', 4),
+        ('len("hello world")', 11),
+        ("len(1)", "argument to `len` not supported, got INTEGER"),
+        ('len("one", "two")', "wrong number of arguments. got=2, want=1"),
+    ],
+)
+def test_builtin_functions(input: str, expected: Any) -> None:
+    evaluated = _test_eval(input)
+    if isinstance(expected, int):
+        _test_integer_object(evaluated, expected)
+    else:
+        assert isinstance(evaluated, Error)
+        assert evaluated.message == expected
+
+
+def test_array_literals() -> None:
+    input = "[1, 2 * 2, 3 + 3]"
+
+    evaluated = _test_eval(input)
+    assert isinstance(evaluated, Array)
+    assert len(evaluated.elements) == 3
+    _test_integer_object(evaluated.elements[0], 1)
+    _test_integer_object(evaluated.elements[1], 4)
+    _test_integer_object(evaluated.elements[2], 6)
+
+
+@pytest.mark.parametrize(
+    "input, expected",
+    [
+        (
+            "[1, 2, 3][0]",
+            1,
+        ),
+        (
+            "[1, 2, 3][1]",
+            2,
+        ),
+        (
+            "[1, 2, 3][2]",
+            3,
+        ),
+        (
+            "let i = 0; [1][i];",
+            1,
+        ),
+        (
+            "[1, 2, 3][1 + 1];",
+            3,
+        ),
+        (
+            "let myArray = [1, 2, 3]; myArray[2];",
+            3,
+        ),
+        (
+            "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+            6,
+        ),
+        (
+            "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]",
+            2,
+        ),
+        (
+            "[1, 2, 3][3]",
+            None,
+        ),
+        (
+            "[1, 2, 3][-1]",
+            None,
+        ),
+    ],
+)
+def test_array_index_expressions(input: str, expected: Any) -> None:
+    evaluated = _test_eval(input)
+    if isinstance(expected, int):
+        _test_integer_object(evaluated, expected)
+    else:
+        _test_null_object(evaluated)

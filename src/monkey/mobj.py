@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 
 from monkey import ast
 from monkey.environment import Environment
@@ -42,6 +42,17 @@ class String(MonkeyObject):
         super().__init__(value)
 
 
+class Array(MonkeyObject):
+    monkey_type: str = "ARRAY"
+
+    def __init__(self, elements: list[MonkeyObject]):
+        super().__init__(elements)
+        self.elements = elements
+
+    def __str__(self) -> str:
+        return f"[{', '.join(str(e) for e in self.elements)}]"
+
+
 class ReturnValue(MonkeyObject):
     monkey_type: str = "RETURN_VALUE"
 
@@ -73,6 +84,20 @@ class Function(MonkeyObject):
         self.parameters = parameters
         self.body = body
         self.env = env
+
+
+class Builtin(MonkeyObject):
+    monkey_type: str = "BUILTIN"
+
+    def __init__(self, fn: Callable):
+        super().__init__(fn)
+        self.fn = fn
+
+    def __call__(self, *args: MonkeyObject) -> MonkeyObject:
+        return self.fn(*args)
+
+    def __str__(self) -> str:
+        return "builtin function"
 
 
 TRUE = Boolean(True)

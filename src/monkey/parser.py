@@ -170,28 +170,11 @@ class Parser:
         )
 
     def parse_call_expression(self, function: ast.Expression) -> ast.Expression:
-        arguments = self.parse_call_arguments()
+        cur_token = self.cur_token
+        arguments = self.parse_expression_list(TokenType.RPAREN)
         return ast.CallExpression(
-            token=self.cur_token, function=function, arguments=arguments
+            token=cur_token, function=function, arguments=arguments
         )
-
-    def parse_call_arguments(self) -> list[ast.Expression]:
-        arguments: list[ast.Expression] = []
-        if self.peek_token_is(TokenType.RPAREN):
-            self.next_token()
-            return arguments
-
-        self.next_token()
-        arguments.append(self.parse_expression(Precedence.LOWEST))
-
-        while self.peek_token_is(TokenType.COMMA):
-            self.next_token()
-            self.next_token()
-            arguments.append(self.parse_expression(Precedence.LOWEST))
-
-        if not self.expect_peek(TokenType.RPAREN):
-            return []
-        return arguments
 
     def parse_index_expression(self, left: ast.Expression) -> ast.Expression:
         cur_token = self.cur_token
