@@ -14,13 +14,6 @@ class MonkeyObject:
         return str(self.value)
 
 
-class Integer(MonkeyObject):
-    monkey_type: str = "INTEGER"
-
-    def __init__(self, value: int):
-        super().__init__(value)
-
-
 class Boolean(MonkeyObject):
     monkey_type: str = "BOOLEAN"
 
@@ -33,6 +26,20 @@ class Null(MonkeyObject):
 
     def __init__(self):
         super().__init__(None)
+
+
+class Integer(MonkeyObject):
+    monkey_type: str = "INTEGER"
+
+    def __init__(self, value: int):
+        super().__init__(value)
+
+
+class String(MonkeyObject):
+    monkey_type: str = "STRING"
+
+    def __init__(self, value: str):
+        super().__init__(value)
 
 
 class ReturnValue(MonkeyObject):

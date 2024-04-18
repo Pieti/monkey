@@ -1,12 +1,11 @@
 from typing import Optional
 
 import pytest
-
 from monkey.environment import Environment
 from monkey.evaluator import monkey_eval
 from monkey.lexer import Lexer
 from monkey.mobj import (FALSE, NULL, TRUE, Error, Function, Integer,
-                         MonkeyObject)
+                         MonkeyObject, String)
 from monkey.parser import Parser
 
 
@@ -178,6 +177,10 @@ def test_return_statements(input: str, expected: int) -> None:
             "foobar",
             "identifier not found: foobar",
         ),
+        (
+            '"Hello" - "World"',
+            "unknown operator: STRING - STRING",
+        ),
     ],
 )
 def test_error_handling(input: str, expected_message: str) -> None:
@@ -236,3 +239,18 @@ def test_closures() -> None:
     """
 
     _test_integer_object(_test_eval(input), 4)
+
+
+def test_string_literal() -> None:
+    input = '"Hello, World!"'
+    string = _test_eval(input)
+    assert isinstance(string, String)
+    assert string.value == "Hello, World!"
+
+
+def test_string_concatenation() -> None:
+    input = '"Hello" + " " + "World!"'
+
+    evaluated = _test_eval(input)
+    assert isinstance(evaluated, String)
+    assert evaluated.value == "Hello World!"

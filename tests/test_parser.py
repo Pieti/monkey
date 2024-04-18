@@ -1,7 +1,6 @@
 from typing import Any
 
 import pytest
-
 from monkey import ast
 from monkey.lexer import Lexer
 from monkey.parser import Parser
@@ -335,3 +334,17 @@ def test_if_expression() -> None:
     stmt = program.statements[0]
     assert isinstance(stmt, ast.ExpressionStatement)
     assert isinstance(stmt.expression, ast.IfExpression)
+
+
+def test_string_literal_expression() -> None:
+    input = '"hello world";'
+
+    lexer = Lexer(input)
+    parser = Parser(lexer)
+    program = parser.parse_program()
+
+    assert len(program.statements) == 1
+    stmt = program.statements[0]
+    assert isinstance(stmt, ast.ExpressionStatement)
+    assert isinstance(stmt.expression, ast.StringLiteral)
+    assert stmt.expression.value == "hello world"

@@ -1,7 +1,7 @@
 from monkey import ast
 from monkey.environment import Environment
 from monkey.mobj import (FALSE, NULL, TRUE, Error, Function, Integer,
-                         MonkeyObject, ReturnValue)
+                         MonkeyObject, ReturnValue, String)
 
 
 def monkey_eval(node: ast.Node, env: Environment) -> MonkeyObject:
@@ -28,6 +28,8 @@ def monkey_eval(node: ast.Node, env: Environment) -> MonkeyObject:
         return _eval_identifier(node, env)
     elif isinstance(node, ast.IntegerLiteral):
         return Integer(node.value)
+    elif isinstance(node, ast.StringLiteral):
+        return String(node.value)
     elif isinstance(node, ast.Boolean):
         return TRUE if node.value else FALSE
     elif isinstance(node, ast.PrefixExpression):
@@ -108,6 +110,8 @@ def _eval_infix_expression(
 ) -> MonkeyObject:
     if isinstance(left, Integer) and isinstance(right, Integer):
         return _eval_integer_infix_expression(operator, left, right)
+    if isinstance(left, String) and isinstance(right, String):
+        return _eval_string_infix_expression(operator, left, right)
     if operator == "==":
         return TRUE if left is right else FALSE
     if operator == "!=":
@@ -139,6 +143,16 @@ def _eval_integer_infix_expression(
     if operator == "!=":
         return TRUE if left.value != right.value else FALSE
     return Error(f"unknown operator: {left.monkey_type} {operator} {right.monkey_type}")
+
+
+def _eval_string_infix_expression(
+    operator: str, left: String, right: String
+) -> MonkeyObject:
+    if operator != "+":
+        return Error(
+            f"unknown operator: {left.monkey_type} {operator} {right.monkey_type}"
+        )
+    return String(left.value + right.value)
 
 
 def _eval_if_expression(ie: ast.IfExpression, env: Environment) -> MonkeyObject:
